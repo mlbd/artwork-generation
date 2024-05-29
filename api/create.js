@@ -351,18 +351,6 @@ function findInArray(needle, array) {
     return array.find(element => element === needle) !== undefined;
 }
 
-// Function to check if product exists in the allow_products array
-function checkProductExists(product_id, custom_logo) {
-    if( custom_logo.allow_products == null || custom_logo.allow_products.length < 1 ) {
-        return false;
-    }
-    for (let i = 0; i < custom_logo.allow_products.length; i++) {
-        if (custom_logo.allow_products[i] == product_id) {
-        return true;
-        }
-    }
-    return false;
-}
 
 
 // Function to load a logo image
