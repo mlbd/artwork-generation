@@ -138,7 +138,7 @@ function getFileExtensionFromUrl(url) {
 }
 
 // Function to generate an image with logos
-const generateImageWithLogos = async (backgroundUrl, user_id, product_id, logo, logo_second, custom_logo, logoData, logo_type, custom_logo_type, gallery = false) => {
+const generateImageWithLogos = async (backgroundUrl, proof_id, product_id, logo, logo_second, logoData, logo_type, gallery = false) => {
 
     let itemResult = []
 
@@ -156,6 +156,13 @@ const generateImageWithLogos = async (backgroundUrl, user_id, product_id, logo, 
 
     const backgroundImage = await loadImage(backgroundUrl);
 
+    // create variable mainlogo by checking log or logo_second which one not empty, but if logo not empty then use logo, else use logo_second
+
+    const logoImage1 = logo ? await loadImage(logo) : await loadImage(logo_second);
+    let get_type = get_orientation(logoImage1);
+
+    console.log('get_type', get_type);
+
     const staticCanvas = createCanvas(backgroundImage.width, backgroundImage.height);
     const ctx = staticCanvas.getContext('2d');
 
@@ -167,8 +174,8 @@ const generateImageWithLogos = async (backgroundUrl, user_id, product_id, logo, 
 
     // //customLog( 'itemsWithMatchingProductID', itemsWithMatchingProductID );
 
-    // Find an item with the matching meta_key "ml_logos_positions_{user_id}"
-    const matchingItem = itemsWithMatchingProductID.find(item => item.meta_key === `ml_logos_positions_${user_id}`);
+    // Find an item with the matching meta_key "ml_logos_positions_{proof_id}"
+    const matchingItem = itemsWithMatchingProductID.find(item => item.meta_key === `ml_logos_positions_${proof_id}`);
 
     // //customLog( 'matchingItem', matchingItem );
 
@@ -177,11 +184,11 @@ const generateImageWithLogos = async (backgroundUrl, user_id, product_id, logo, 
 
     // //customLog( 'resultItem', resultItem );
 
-    // console.log(`====> is_feature:${is_feature_image} id:${product_id} user:${user_id} logo_type:${logo_type} custom_logo_type:${custom_logo_type}`, resultItem);
+    // console.log(`====> is_feature:${is_feature_image} id:${product_id} user:${proof_id} logo_type:${logo_type} custom_logo_type:${custom_logo_type}`, resultItem);
 
     if (resultItem != undefined) {
         
-        let finalItem = resultItem.meta_value[logo_type];
+        let finalItem = resultItem.meta_value[get_type];
         let logoNumber = resultItem.meta_value['logoNumber'];
             logoNumber = logoNumber !== undefined ? logoNumber : 'default';
         
@@ -197,10 +204,6 @@ const generateImageWithLogos = async (backgroundUrl, user_id, product_id, logo, 
             finalLogoNumber = 'darker';
         }
 
-        if( 578 === product_id ) {
-            console.log('gallery', gallery);
-        }
-
         if( gallery && gallery !== false && gallery.length !== 0 ) {
             
             if( gallery['type'] === 'lighter' ) {
@@ -211,25 +214,17 @@ const generateImageWithLogos = async (backgroundUrl, user_id, product_id, logo, 
                 finalLogo = logo_second;
                 finalLogoNumber = 'darker';
             }
-
-            if( 578 === product_id ) {
-                console.log('finalLogo', finalLogo);
-                console.log('finalLogoNumber', finalLogoNumber);
-                console.log('logo_second', logo_second);
-            }
         }
 
-        
 
         if (finalItem !== undefined && finalItem !== false) {
 
-            // console.log(`finalItem:${finalItem} id:${product_id} user:${user_id} finalLogoNumber:${finalLogoNumber}`, resultItem);
+            // console.log(`finalItem:${finalItem} id:${product_id} user:${proof_id} finalLogoNumber:${finalLogoNumber}`, resultItem);
 
             let imgData = {
                 url: finalLogo,
                 product_id: product_id,
-                user_id: user_id,
-                custom_logo: custom_logo,
+                proof_id: proof_id,
                 finalLogoNumber: finalLogoNumber,
                 logoNumber: logoNumber,
                 is_feature: is_feature_image
@@ -241,38 +236,24 @@ const generateImageWithLogos = async (backgroundUrl, user_id, product_id, logo, 
 
                 imgData['custom'] = custom;
 
-                const logoImage = await loadLogoImage(imgData);
+                const logoImage = await loadImage(finalLogo);
 
-                // console.log(`--- is_feature:${is_feature_image} custom:${custom} id:${product_id} user:${user_id}`);
+                // console.log(`--- is_feature:${is_feature_image} custom:${custom} id:${product_id} user:${proof_id}`);
 
                 // if custom then check logo_type by image size
                 // then get that type value from resultItem
                 // and re-initialize x, y, width, height, angle again with new values.
                 if( custom === true ) {
                     // console.log( imgData );
-                    console.log(`----------- custom ${custom} custom_logo ${custom_logo} user_id ${user_id} product: ${product_id}`);
+                    console.log(`----------- custom ${custom} custom_logo ${custom_logo} proof_id ${proof_id} product: ${product_id}`);
                     let get_type = get_orientation(logoImage);
-                    if (custom_logo_type && (custom_logo_type === "horizontal" || custom_logo_type === "square")) {
-                        // console.log(`ProductID:${product_id} Type:${custom_logo_type}`);
-                        get_type = custom_logo_type;
-                    }
-
-                    // overwrite get_type if custom_logo[finalLogoNumber] == false. in short if custom logo with finalLogoNumber is emmpty.
-                    if (
-                        custom_logo !== undefined &&
-                        custom_logo.hasOwnProperty(finalLogoNumber) && 
-                        custom_logo[finalLogoNumber] == false
-                    ) {
-                        get_type = logo_type;
-                    }
                     
-
                     let get_type_values = resultItem.meta_value[get_type];
                     
                     // console.log("get_type", get_type, get_type_values);
                     if( get_type_values[index] && get_type_values[index] != null && get_type_values[index] != undefined ) {
 
-                        // console.log(`--- get_type:${get_type} is_feature:${is_feature_image} id:${product_id} user:${user_id} index:${index}`, get_type_values);
+                        // console.log(`--- get_type:${get_type} is_feature:${is_feature_image} id:${product_id} user:${proof_id} index:${index}`, get_type_values);
 
                         ({ x, y, width, height, angle } = get_type_values[index]);
                     }
@@ -319,7 +300,7 @@ const generateImageWithLogos = async (backgroundUrl, user_id, product_id, logo, 
             const dataURL = staticCanvas.toDataURL('image/jpeg', 1);
 
             // Call the function and wait for the result
-            const result = {dataURL, filename, user_id, is_feature_image};
+            const result = {dataURL, filename, proof_id, is_feature_image};
 
             // Convert response data to JSON string
             const responseDataString = JSON.stringify(result);
@@ -386,27 +367,8 @@ function checkProductExists(product_id, custom_logo) {
 
 // Function to load a logo image
 const loadLogoImage = async (imgData) => {
-    const { url, product_id, user_id, is_feature, custom, custom_logo, finalLogoNumber, logoNumber } = imgData;
-    console.log( "-------------- inside loadlogoimage" );
+    const { url, product_id, proof_id, is_feature, custom, custom_logo, finalLogoNumber, logoNumber } = imgData;
     let fetchUrl = url;
-    if( true === custom && custom_logo != null) {
-        console.log( `-------------- first layer loadlogoimage product_id ${product_id}` );
-        if (
-            custom_logo.hasOwnProperty("allow_products") && 
-            Array.isArray(custom_logo.allow_products) && 
-            checkProductExists(product_id, custom_logo)
-        ) {
-            console.log( "-------------- second layer loadlogoimage" );
-            if (
-                custom_logo.hasOwnProperty(finalLogoNumber) && 
-                custom_logo[finalLogoNumber] && 
-                custom_logo.finalLogoNumber !== ""
-            ) {
-                console.log( "-------------- final layer loadlogoimage" );
-                fetchUrl = custom_logo[finalLogoNumber];
-            }
-        }
-    }
 
     return await loadImage(fetchUrl);
 };
@@ -423,13 +385,13 @@ const loadSimpleImage = async (url) => {
 
 // Function to perform the image generation
 const generateImages = async (task) => {
-    const { backgroundUrl, logo, logo_second, custom_logo, user_id, product_id, logoData, logo_type, custom_logo_type, galleries } = task;
+    const { backgroundUrl, logo, logo_second, proof_id, product_id, logoData, logo_type, galleries } = task;
 
-    console.log(`backgroundUrl ${backgroundUrl} logo ${logo} logo_second ${logo_second} custom_logo ${custom_logo} user_id ${user_id} product_id ${product_id} logoData ${logoData} logo_type ${logo_type} custom_logo_type ${custom_logo_type}`);
+    console.log(`backgroundUrl ${backgroundUrl} logo ${logo} logo_second ${logo_second} proof_id ${proof_id} product_id ${product_id} logoData ${logoData} logo_type ${logo_type}`);
 
     const promises = [];
 
-    promises.push(generateImageWithLogos(backgroundUrl, user_id, product_id, logo, logo_second, custom_logo, logoData, logo_type, custom_logo_type));
+    promises.push(generateImageWithLogos(backgroundUrl, proof_id, product_id, logo, logo_second, logoData, logo_type));
 
     if (galleries && galleries.length !== 0) {
         const galleriesConvert = convertGallery(galleries);
@@ -445,7 +407,7 @@ const generateImages = async (task) => {
                 galleryItem['type'] = galleryItem['type'].toLowerCase();
             }
 
-            promises.push(generateImageWithLogos(galleryUrl, user_id, product_id, logo, logo_second, custom_logo, logoData, logo_type, custom_logo_type, galleryItem));
+            promises.push(generateImageWithLogos(galleryUrl, proof_id, product_id, logo, logo_second, logoData, logo_type, galleryItem));
         });
     }
 
@@ -514,7 +476,7 @@ function getItemData(settings) {
 
     if (
         !settings.logo ||
-        !settings.user_id
+        !settings.proof_id
     ) {
         customLog("required variables are undefined");
         return false;
@@ -533,11 +495,9 @@ function getItemData(settings) {
     let logo_type = settings.logo_type;
 
     const logo = settings.logo;
-    const user_id = settings.user_id;
+    const proof_id = settings.proof_id;
     let logo_second = settings.second_logo;
-    let custom_logo = settings.custom_logo;
     let product_id = settings.product_id;
-    let custom_logo_type = settings.custom_logo_type;
     let galleries = settings.galleries;
     // let custom_logo = undefined;
 
@@ -546,7 +506,7 @@ function getItemData(settings) {
         logo_second = undefined; // or set to a default value
     }
 
-    const task = { backgroundUrl, logo, logo_second, custom_logo, user_id, product_id, logoData, logo_type, custom_logo_type, galleries };
+    const task = { backgroundUrl, logo, logo_second, proof_id, product_id, logoData, logo_type, galleries };
 
     // console.log(task);
 
