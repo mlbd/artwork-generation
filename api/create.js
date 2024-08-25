@@ -245,7 +245,7 @@ const generateImageWithLogos = async (backgroundUrl, proof_id, product_id, logo,
                 // and re-initialize x, y, width, height, angle again with new values.
                 if( custom === true ) {
                     // console.log( imgData );
-                    console.log(`----------- custom ${custom} custom_logo ${custom_logo} proof_id ${proof_id} product: ${product_id}`);
+                    console.log(`----------- custom ${custom} proof_id ${proof_id} product: ${product_id}`);
                     let get_type = get_orientation(logoImage);
                     
                     let get_type_values = resultItem.meta_value[get_type];
@@ -487,7 +487,6 @@ function getItemData(settings) {
     let logo_second = settings.second_logo;
     let product_id = settings.product_id;
     let galleries = settings.galleries;
-    // let custom_logo = undefined;
 
     if (logo_second && !isValidUrl(logo_second)) {
         // console.log('logo_second is not a valid URL. Setting to undefined or default.');
